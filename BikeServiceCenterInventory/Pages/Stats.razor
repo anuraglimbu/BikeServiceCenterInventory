@@ -1,0 +1,162 @@
+@page "/stats"
+
+@using PSC.Blazor.Components.Chartjs
+
+@using System.Drawing
+
+@using BikeServiceCenterInventory.Models
+@using BikeServiceCenterInventory.Services
+@using BikeServiceCenterInventory.Constants
+
+@inject NavigationManager NavManager
+
+@inject InventoryService Inventory
+@inject RecordKeepingService Records
+
+<h4 class="fw-bolder h4 text-center">Stats</h4>
+<center>
+	<hr class="underline" style="width:5em;height:3px;opacity:1">
+</center>
+<div class="row justify-content-center">
+	<div class="col-lg-12">
+		<div class="card rounded-0">
+			<div class="col-lg-12">
+				<div class="card-body justify-content-center">
+					@if (InventoryItems != null && RecordData != null)
+					{
+						<Chart Config="_config1" @ref="_chart1"></Chart>
+					}
+					else
+					{
+						<p>Loading....</p>
+					}
+
+					
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+@code
+{
+	private List<Item> InventoryItems;
+	private List<Record> RecordData;
+
+	private BarChartConfig _config1;
+	private Chart _chart1;
+
+	public static List<BarDataItem> RecordsDataset;
+	public static List<String> RecordsDatasetColorPalette;
+	public static List<String> RecordsDatasetBorderColorPalette;
+
+	static Random rnd = new Random();
+
+	protected override async Task OnInitializedAsync()
+	{
+		InventoryItems = await Inventory.getAllItems();
+		RecordData = await Records.getAllRecords();
+
+		RecordsDataset = new List<BarDataItem>();
+		RecordsDatasetColorPalette = new List<String>();
+		RecordsDatasetBorderColorPalette = new List<String>();
+
+		foreach(var item in InventoryItems)
+		{
+			BarDataItem tempBarDataItem = new BarDataItem() { Name = item.ItemName};
+			List<Record> selectedRecords;
+
+			if (RecordData.Where(i => i.Id == item.Id).Count() > 0)
+			{
+				int TotalTakenOut = 0;
+				selectedRecords = RecordData.Where(i => i.Id == item.Id).ToList();
+
+				foreach(var record in selectedRecords)
+				{
+					TotalTakenOut += record.QuantityTakenOut;
+				}
+
+				tempBarDataItem.Value = TotalTakenOut;
+			}
+			else
+			{
+				tempBarDataItem.Value = 0;
+			}
+
+			//tempBarDataItem.Value = RecordData.Where(i => i.Id == item.Id).Count();
+			
+
+			int r = rnd.Next(Colors.Palette.Count);
+
+			RecordsDataset.Add(tempBarDataItem);
+			RecordsDatasetColorPalette.Add(Colors.Palette.ElementAt(r));
+			RecordsDatasetBorderColorPalette.Add(Colors.PaletteBorder.ElementAt(r));
+		}
+
+		_config1 = new BarChartConfig()
+		{
+			Options = new Options()
+			{
+				Responsive = true,
+				MaintainAspectRatio = true,
+				Plugins = new Plugins()
+				{
+					Legend = new Legend()
+					{
+						Align = Align.Center,
+						Display = false,
+						Position = LegendPosition.Right
+					},
+					Title = new Title()
+					{
+						Display = true,
+						Text = "Number of Inventory Items Taken Out"
+					}
+				},
+				Scales = new Dictionary<string, Axis>()
+				{
+					{
+						Scales.XAxisId, 
+						new Axis()
+						{
+							Stacked = true,
+							Ticks = new Ticks()
+							{
+								MaxRotation = 0,
+								MinRotation = 0
+							}
+						}
+					},
+					{
+						Scales.YAxisId, new Axis()
+						{
+
+							Stacked = true
+						}
+					}
+				}
+			},
+		};
+
+		_config1.Data.Labels = RecordsDataset.Select(l => l.Name).ToList();
+		_config1.Data.Datasets.Add(new BarDataset()
+		{
+			Label = "Total Taken Out",
+			Data = RecordsDataset.Select(l => l.Value).ToList(),
+			BackgroundColor = RecordsDatasetColorPalette,
+			BorderColor = RecordsDatasetBorderColorPalette,
+			BorderWidth = 1,
+		});
+
+
+		/*_config1.Data.Labels = SimpleBar.Select(l => l.Name).ToList();
+		_config1.Data.Datasets.Add(new BarDataset()
+		{
+			Label = "Value",
+			Data = SimpleBar.Select(l => l.Value).ToList(),
+			BackgroundColor = Colors.Palette,
+			BorderColor = Colors.PaletteBorder,
+			BorderWidth = 1
+		});*/
+	}
+}

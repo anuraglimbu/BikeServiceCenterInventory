@@ -1,0 +1,157 @@
+.page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+.sidebar {
+    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+}
+
+.top-row {
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #d6d5d5;
+    justify-content: flex-end;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+}
+
+    .top-row ::deep a, .top-row ::deep .btn-link {
+        white-space: nowrap;
+        margin-left: 1.5rem;
+        text-decoration: none;
+    }
+
+    .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
+        text-decoration: underline;
+    }
+
+    .top-row ::deep a:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+@media (max-width: 640.98px) {
+    .top-row:not(.auth) {
+        display: none;
+    }
+
+    .top-row.auth {
+        justify-content: space-between;
+    }
+
+    .top-row ::deep a, .top-row ::deep .btn-link {
+        margin-left: 0;
+    }
+}
+
+@media (min-width: 641px) {
+    .page {
+        flex-direction: row;
+    }
+
+    .sidebar {
+        width: 250px;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+    }
+
+    .top-row {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .top-row, article {
+        padding-left: 2rem !important;
+        padding-right: 1.5rem !important;
+    }
+}
+
+/*------------------- Custom Implementation ---------------------*/
+body {
+    background-color: #f9fbfd;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 100vh;
+}
+
+#main {
+    flex: 1;
+}
+
+.form-select:focus, .form-control:focus, .form-check-input:focus {
+    border-color: rgba(83, 98, 113, 0.8) !important;
+    box-shadow: 0 0px 10px rgba(83, 98, 113, 0.6) !important;
+}
+
+.form-switch .form-check-input:checked {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;
+}
+
+.form-switch .form-check-input:focus {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e")
+}
+
+.h4 {
+    color: #3E4C5E;
+}
+
+.text-color-primary {
+    color: #3E4C5E;
+}
+
+.text-color-secondary {
+    color: #536271;
+}
+
+.bg-color-primary {
+    background-color: #3E4C5E;
+}
+
+.bg-color-secondary {
+    background-color: #536271;
+}
+
+.btn-primary {
+    background-color: #536271;
+    border-color: #536271;
+}
+
+    .btn-primary:hover {
+        border-color: #536271;
+        background-color: #3E4C5E;
+    }
+
+.form-check-input:checked {
+    background-color: #536271;
+    border-color: #536271;
+}
+
+.card-header .h4 {
+    color: #fff;
+}
+
+.card-header {
+    background-color: #3E4C5E;
+}
+
+.card-label {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.card-text-custom {
+    font-size: 14px;
+}

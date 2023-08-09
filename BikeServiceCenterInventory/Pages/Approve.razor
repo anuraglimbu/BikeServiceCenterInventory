@@ -1,0 +1,255 @@
+@page "/approve"
+
+@using BikeServiceCenterInventory.Models
+@using BikeServiceCenterInventory.Services
+
+@inject NavigationManager NavManager
+
+@inject InventoryService Inventory
+@inject RecordKeepingService Record
+
+<h4 class="fw-bolder h4 text-center">Approve Item</h4>
+<center>
+    <hr class="underline" style="width:5em;height:3px;opacity:1">
+</center>
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-md-8 col-sm-10 col-xs-12">
+        @if (globalSuccessMessage != null)
+        {
+            <div class="alert alert-success alert-dismissible" role="alert">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" @onclick="CloseSuccessMessage" aria-label="Close"></button>
+                @globalSuccessMessage
+            </div>
+        }
+
+        @if (globalErrorMessage != null)
+        {
+            <div class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" @onclick="CloseErrorMessage" aria-label="Close"></button>
+                @globalErrorMessage
+            </div>
+        }
+
+        <div class="card rounded-0 shadow">
+            <div class="card-body">
+                <div class="container-fluid">
+                    <div>
+                        @if (errorString != null)
+                        {
+                            <div class="alert alert-danger rounded-0 pb-0 align-content-center">
+                                <ul class="list-unstyled ps-0 text-center">
+                                    <li>
+                                        @errorString
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        @if(!InvalidTimeOrDay)
+                        {
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="floatingSelect" @bind="ItemId">
+                                    <option value="-1" selected>Select the item to approve</option>
+                                    @if (ItemSelections.Count > 0)
+                                    {
+                                        @if (ItemSelections != null)
+                                        {
+                                            ItemSelections = ItemSelections.OrderBy(i => i.ItemName).ToList();
+                                            @foreach (Item item in ItemSelections)
+                                            {
+                                                <option value="@item.Id">@item.ItemName (In Stock: @item.Quantity)</option>
+                                            }
+                                        }
+                                    }
+                                </select>
+                                <label for="floatingSelect">Item</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <input name="TakeOutQuantity" type="number" class="form-control" @bind="TakeOutQuantity">
+                                <label for="TakeOutQuantity" class="control-label">Take Out Quantity</label>
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <input name="TakenBy" type="text" class="form-control" @bind="TakenBy">
+                                <label for="TakenBy" class="control-label">Taken By</label>
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group text-center">
+                                <input @onclick="ApproveItem" type="submit" value="Approve" class="form-control w-auto btn btn-primary" />
+                                <button @onclick="FormReset" class="form-control w-auto btn btn-default border">Cancel</button>
+                                <a href="/viewrecords" class="form-control w-auto btn btn-secondary"><span class="oi oi-list"></span>&nbsp;View Records</a>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="form-floating mb-3">
+                                <select class="form-select" disabled id="floatingSelect" @bind="ItemId">
+                                    <option value="-1" selected>Select the item to approve</option>
+                                    @if (ItemSelections.Count > 0)
+                                    {
+                                        @if (ItemSelections != null)
+                                        {
+                                            ItemSelections = ItemSelections.OrderBy(i => i.ItemName).ToList();
+                                            @foreach (Item item in ItemSelections)
+                                            {
+                                                <option value="@item.Id">@item.ItemName (In Stock: @item.Quantity)</option>
+                                            }
+                                        }
+                                    }
+                                </select>
+                                <label for="floatingSelect">Item</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <input name="TakeOutQuantity" type="number" class="form-control" disabled @bind="TakeOutQuantity">
+                                <label for="TakeOutQuantity" class="control-label">Take Out Quantity</label>
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <input name="TakenBy" type="text" class="form-control" disabled @bind="TakenBy">
+                                <label for="TakenBy" class="control-label">Taken By</label>
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group text-center">
+                                <div class="form-control w-auto btn btn-primary">Approve</div>
+                                <div class="form-control w-auto btn btn-default border">Cancel</div>
+                                <a href="/viewrecords" class="form-control w-auto btn btn-secondary"><span class="oi oi-list"></span>&nbsp;View Records</a>
+                            </div>
+                        }
+                    </div>
+                    @if(debug)
+                    {
+                        <p>
+                           InvalidTimeOrDay: @InvalidTimeOrDay
+                           DayOfWeek: @DateTime.Now.DayOfWeek
+                        </p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    private List<Item> ItemSelections;
+
+    private int TakeOutQuantity = 0;
+    private bool InvalidTimeOrDay = false;
+
+    private bool debug = true;
+
+#nullable enable
+    private String? ItemId = "-1";
+    private String? TakenBy;
+
+    private String? errorString;
+    private String? globalSuccessMessage;
+    private String? globalErrorMessage;
+#nullable disable
+
+    private async void ApproveItem()
+    {
+        globalSuccessMessage = null;
+        globalErrorMessage = null;
+
+        errorString = null;
+
+        if (!InvalidTimeOrDay)
+        {
+            if (ItemId != "-1" && !string.IsNullOrEmpty(TakenBy))
+            {
+                if (TakeOutQuantity <= 0)
+                {
+                    errorString = "No quantity given for taking out";
+                }
+                else
+                {
+                    if (TakenBy == "")
+                    {
+                        errorString = "No name of person taking item";
+                    }
+                    else
+                    {
+                        int qtyInStock = await Inventory.getQtyInStock(int.Parse(ItemId));
+                        if (TakeOutQuantity > qtyInStock)
+                        {
+                            errorString = "We don't have more than " + qtyInStock + " in stock";
+                        }
+                        else
+                        {
+                            if (await Record.addRecord(int.Parse(ItemId), TakeOutQuantity, TakenBy))
+                            {
+                                globalSuccessMessage = "Approved " + ItemSelections.First(item => item.Id == int.Parse(ItemId)).ItemName + " Successfully";
+                                FormReset();
+                            }
+                            else
+                            {
+                                globalErrorMessage = "Could Not Approve " + ItemSelections.First(item => item.Id == int.Parse(ItemId)).ItemName;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void FormReset()
+    {
+        ItemId = "-1";
+        TakeOutQuantity = 0;
+        TakenBy = null;
+    }
+
+    private void CloseErrorMessage()
+    {
+        globalErrorMessage = null;
+    }
+
+    private void CloseSuccessMessage()
+    {
+        globalSuccessMessage = null;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ItemSelections = await Inventory.getAllItems();
+
+        var now = DateTime.Now;
+
+        bool DayIsInvalid = false;
+
+        switch (now.DayOfWeek.ToString())
+        {
+            case "Saturday":
+                errorString = "You can only approve taking out items during Monday to Friday";
+                DayIsInvalid = true;
+                InvalidTimeOrDay = true;
+                break;
+
+            case "Sunday":
+                errorString = "You can only approve taking out items during Monday to Friday";
+                DayIsInvalid = true;
+                InvalidTimeOrDay = true;
+                break;
+
+            default:
+                DayIsInvalid = false;
+                InvalidTimeOrDay = false;
+                break;
+        }
+
+        if (!DayIsInvalid)
+        {
+            if ((now.Hour >= 9) && (now.Hour < 16))
+            {
+                InvalidTimeOrDay = false;
+            }
+            else
+            {
+                errorString = "You can only approve taking out items during 9:00AM to 3:59PM";
+                InvalidTimeOrDay = true;
+            }
+        }
+    }
+}

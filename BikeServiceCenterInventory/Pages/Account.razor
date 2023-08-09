@@ -1,0 +1,328 @@
+@page "/account"
+
+@using BikeServiceCenterInventory.Models
+@using BikeServiceCenterInventory.Data
+@using BikeServiceCenterInventory.Services
+
+@inject AuthenticationService Auth
+
+@if(admin != null)
+{
+	<h4 class="fw-bolder h4 text-center">Manage your account</h4>
+
+	<center>
+		<hr class="underline" style="width:5em;height:3px;opacity:1">
+	</center>
+
+	<div class="mb-4">
+		<center>
+			<h2 class="text-color-primary">Change your account settings</h2>
+		</center>
+		<hr />
+		<div class="row">
+			<div class="col">
+
+				@if(globalSuccessMessage != null)
+				{
+					<div class="alert alert-success alert-dismissible" role="alert">
+						<button type="button" class="btn-close" data-bs-dismiss="alert" @onclick="CloseSuccessMessage" aria-label="Close"></button>
+						@globalSuccessMessage
+					</div>
+				}
+
+				@if (globalErrorMessage != null)
+				{
+					<div class="alert alert-danger alert-dismissible" role="alert">
+						<button type="button" class="btn-close" data-bs-dismiss="alert" @onclick="CloseErrorMessage" aria-label="Close"></button>
+						@globalErrorMessage
+					</div>
+				}
+
+				@if(!ShowProfileFlag)
+				{
+					<nav>
+						<div class="nav nav-tabs" id="nav-tab" role="tablist">
+							<button @onclick="ShowProfile" class="nav-link" id="user-profile-tab" data-bs-toggle="tab" data-bs-target="#user-profile" type="button" role="tab" aria-controls="user-profile" aria-selected="false">Profile</button>
+							<button @onclick="ShowChangePassword" class="nav-link active" id="user-password-tab" data-bs-toggle="tab" data-bs-target="#user-password" type="button" role="tab" aria-controls="user-password" aria-selected="true">Change Password</button>
+						</div>
+					</nav>
+
+					<div class="card rounded-0 border-top-0">
+						<div class="card-body">
+							<div class="container-fluid table-responsive">
+								<div class="tab-content" id="nav-tabContent">
+
+									<div class="tab-pane fade show active" id="user-password" role="tabpanel" aria-labelledby="user-password-tab">
+										<div id="profile-form" class="mt-5 mb-4">
+											<div class="row justify-content-center">
+												<div class="col-lg-10 col-xl-8">
+													@if (passwordErrorString != null && passwordErrorString.Count != 0)
+													{
+														
+														<div class="alert alert-danger rounded-0 pb-0 align-content-center">
+															<ul>
+																@foreach (var errorString in passwordErrorString)
+																{
+																	<li>
+																		@errorString
+																	</li>
+																}
+															</ul>
+														</div>
+													}
+													<div class="form-floating mb-2">
+														<input name="CurrentPassword" type="password" class="form-control" aria-required="true" @bind="CurrentPassword" />
+														<label for="CurrentPassword" class="form-label">Current password</label>
+													</div>
+													<div class="form-floating mb-2">
+														<input name="NewPassword" type="password" class="form-control" aria-required="true" @bind="NewPassword" />
+														<label for="NewPassword" class="form-label">New password</label>
+													</div>
+													<div class="form-floating mb-2">
+														<input name="ConfirmPassword" type="password" class="form-control" aria-required="true" @bind="ConfirmPassword" />
+														<label for="ConfirmPassword" class="form-label">Confirm new password</label>
+													</div>
+													<div class="mb-3">
+														<button id="update-profile-button" @onclick="UpdatePassword" class="w-100 form-control btn btn-lg btn-primary">Update password</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				}
+				else
+				{
+					<nav>
+						<div class="nav nav-tabs" id="nav-tab" role="tablist">
+							<button @onclick="ShowProfile" class="nav-link active" id="user-profile-tab" data-bs-toggle="tab" data-bs-target="#user-profile" type="button" role="tab" aria-controls="user-profile" aria-selected="true">Profile</button>
+							<button @onclick="ShowChangePassword" class="nav-link" id="user-password-tab" data-bs-toggle="tab" data-bs-target="#user-password" type="button" role="tab" aria-controls="user-password" aria-selected="false">Change Password</button>
+						</div>
+					</nav>
+
+					<div class="card rounded-0 border-top-0">
+						<div class="card-body">
+							<div class="container-fluid table-responsive">
+								<div class="tab-content" id="nav-tabContent">
+
+									<div class="tab-pane fade show active" id="user-profile" role="tabpanel" aria-labelledby="user-profile-tab">
+										<div id="profile-form" class="mt-5 mb-4">
+											<div class="row justify-content-center">
+												<div class="col-lg-10 col-xl-8">
+													<div class="row">
+														<div class="col-sm-12 col-md-6">
+															<div class="form-floating mb-2">
+																@if (FirstName != null)
+																{
+																	<input name="FirstName" class="form-control" aria-required="true" @bind="FirstName" />
+																}
+																<label for="FirstName">First Name</label>
+																<span asp-validation-for="Input.FirstName" class="text-danger"></span>
+															</div>
+														</div>
+														<div class="col-sm-12 col-md-6">
+															<div class="form-floating mb-2">
+																@if (LastName != null)
+																{
+																	<input name="LastName" class="form-control" aria-required="true" @bind="LastName" />
+																}
+
+																<label for="LastName" class="form-label">Last Name</label>
+																<span asp-validation-for="Input.LastName" class="text-danger"></span>
+															</div>
+														</div>
+													</div>
+
+													<div class="form-floating mb-2">
+														@if (UserName != null)
+														{
+															<input name="UserName" class="form-control" aria-required="true" @bind="UserName" />
+														}
+														<label for="UserName" class="form-label">Username</label>
+													</div>
+													<div class="form-floating mb-2">
+														<input name="LocalRole" value="Admin" disabled class="form-control" />
+														<label for="LocalRole" class="form-label">Role</label>
+													</div>
+													<div class="mb-3">
+														<button id="update-profile-button" @onclick="Save" class="w-100 form-control btn btn-lg btn-primary">Save</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				}
+				
+			</div>
+		</div>
+	</div>
+
+	@if(test)
+	{
+		<p>
+			Username = @UserName <br>
+			Firstname = @FirstName <br>
+			Lastname = @LastName <br>
+		</p>
+
+		<p>
+			admin.Username = @admin.UserName <br>
+			admin.Firstname = @admin.FirstName <br>
+			admin.Lastname = @admin.LastName <br>
+		</p>
+	}
+
+}
+else
+{
+	<p>Loading...</p>
+}
+
+@code 
+{
+	private Admin admin { get; set; }
+	private Admin newAdminData { get; set; }
+
+	private int Id;
+	private String FirstName;
+	private String LastName;
+	private String UserName;
+	private String Password;
+
+#nullable enable
+	private String? CurrentPassword;
+	private String? NewPassword;
+	private String? ConfirmPassword;
+#nullable disable
+
+	[CascadingParameter]
+	public AppState ApplicationState { get; set; }
+
+#nullable enable
+	private String? globalSuccessMessage;
+	private String? globalErrorMessage;
+#nullable disable
+
+	private bool ShowProfileFlag = true;
+
+	//private String profileErrorString;
+	private List<String> passwordErrorString = new List<string>();
+
+	protected override async Task OnInitializedAsync()
+	{
+		if (await Auth.isLoggedIn())
+		{
+			ApplicationState.IsLoggedIn = true;
+			admin = await Auth.getUser();
+			Id = admin.Id;
+			FirstName = admin.FirstName;
+			LastName = admin.LastName;
+			UserName = admin.UserName;
+			Password = admin.Password;
+		}
+		else
+		{
+			ApplicationState.IsLoggedIn = false;
+		}
+	}
+
+	private bool test = false;
+
+	private async void Save()
+	{
+		globalSuccessMessage = null;
+		globalErrorMessage = null;
+
+		newAdminData = new Admin
+		{
+			Id = Id,
+			UserName = UserName,
+			FirstName = FirstName,
+			LastName = LastName,
+			Password = Password
+		};
+
+
+		if(await Auth.updateUser(newAdminData))
+		{
+			globalSuccessMessage = "Saved Changes Successfully";
+			admin = newAdminData;
+		}
+		else
+		{
+			globalErrorMessage = "Could Not Save Changes";
+		}
+	}
+
+	private void CloseErrorMessage()
+	{
+		globalErrorMessage = null;
+	}
+
+	private void CloseSuccessMessage()
+	{
+		globalSuccessMessage = null;
+	}
+
+	private void ShowProfile()
+	{
+		ShowProfileFlag = true;
+	}
+
+	private void ShowChangePassword()
+	{
+		ShowProfileFlag = false;
+	}
+
+	private async void UpdatePassword()
+	{
+		globalSuccessMessage = null;
+		globalErrorMessage = null;
+
+		passwordErrorString = new List<String>();
+
+
+		if (!string.IsNullOrEmpty(CurrentPassword) && !string.IsNullOrEmpty(NewPassword) && !string.IsNullOrEmpty(ConfirmPassword))
+		{
+			if (CurrentPassword != Password)
+			{
+				passwordErrorString.Add("Password is incorrect!");
+			}
+
+			if (NewPassword != ConfirmPassword)
+			{
+				passwordErrorString.Add("New passwords do not match!");
+			}
+
+			if(passwordErrorString.Count == 0)
+			{
+				newAdminData = new Admin
+				{
+					Id = Id,
+					UserName = UserName,
+					FirstName = FirstName,
+					LastName = LastName,
+					Password = NewPassword
+				};
+
+
+				if (await Auth.updateUser(newAdminData))
+				{
+					globalSuccessMessage = "Changed Password Successfully";
+					admin = newAdminData;
+				}
+				else
+				{
+					globalErrorMessage = "Could Not Change Password";
+				}
+			}
+		}
+	}
+}

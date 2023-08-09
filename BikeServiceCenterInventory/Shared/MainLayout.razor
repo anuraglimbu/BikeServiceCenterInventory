@@ -1,0 +1,160 @@
+﻿@*
+===================================================================
+	Thes page is used by MAUI to define the main layoutin the 
+	UI. Have added the functionality such that the UI with nav-
+	igation appears only when user is logged in, otherwise will
+	display the full sized Login page with no navigation pane.
+===================================================================
+*@
+
+@inherits LayoutComponentBase
+
+@using BikeServiceCenterInventory.Services
+@using BikeServiceCenterInventory.Models
+
+@inject NavigationManager NavManager
+
+@inject AuthenticationService Auth
+
+
+@*
+	Wrapping the UI inside CascadingValue defines the Value of 
+	ApplicationState object to be available to all the needed
+	pages of UI and any changes made to ApplicationState in other 
+	pages will be reflected on this ApplciationState's value
+*@
+<CascadingValue Value="ApplicationState">
+
+	@*
+		If application's state is set to logged in, display the main UI
+		otherwise, display the Login page.
+	*@
+	@if (ApplicationState.IsLoggedIn)
+	{
+		<div class="page">
+			<div class="sidebar">
+				<NavMenu />
+			</div>
+
+
+			<div class="content">
+				<div class="clear-fix pt-0 pb-1"></div>
+				<div class="container mt-1" id="main">
+
+					@Body
+
+					
+					<hr class="underline" style="height:2px;opacity:1">
+
+				</div>
+			</div>
+		</div>
+	}
+	else
+	{
+		<div class="content">
+			<div class="clear-fix pt-2 pb-3"></div>
+
+			<div class="container mt-3" id="main">
+				<div class="row justify-content-center mt-3 mb-4">
+					<div class="col-lg-5 col-md-8 col-sm-10 col-xs-12">
+						<div class="card rounded-0 shadow">
+							<div class="card-header">
+								<div class="card-title text-center h4 fw-bolder">Log In</div>
+							</div>
+							<div class="card-body">
+								<div class="container-fluid">
+									@if (errorString != null) // This will check if there's error or not and display it
+									{
+										<div class="alert alert-danger rounded-0 pb-0 align-content-center">
+											<ul class="list-unstyled ps-0 text-center">
+												<li>
+													@errorString
+												</li>
+											</ul>
+										</div>
+									}
+									<div class="form-horizontal" id="account">
+										<div class="form-floating mb-3">
+											<input class="form-control" type="text" aria-required="true" @bind="userName" />
+											<label class="form-label">Username</label>
+											<span asp-validation-for="Input.Email" class="text-danger"></span>
+										</div>
+										<div class="form-floating  mb-3">
+											<input class="form-control" type="password" aria-required="true" @bind="password" />
+											<label class="form-label">Password</label>
+											<span asp-validation-for="Input.Password" class="text-danger"></span>
+										</div>
+										<div class="mb-2 justify-content-center">
+											<div class="form-check form-switch mb-3">
+												<input class="form-check-input cursor-pointer" type="checkbox">
+												<label class="form-check-label" >Remember Me</label>
+											</div>
+										</div>
+										<div class="mb-3 d-grid">
+											<button id="login-submit" @onclick="Submit" class="w-100 form-control btn btn-lg btn-primary">Log in</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	}
+</CascadingValue>
+
+
+@code {
+	private AppState ApplicationState { get; set; } = new AppState { IsLoggedIn = false};
+
+	/*
+		When page is loaded, check if user is logged in or not using the
+		Authentication service, and if is logged in display the main UI,
+		if not, display login page
+	*/
+	protected override async Task OnInitializedAsync()
+	{
+		if (await Auth.isLoggedIn())
+		{
+			ApplicationState.IsLoggedIn = true;
+		}
+		else
+		{
+			ApplicationState.IsLoggedIn = false;
+		}
+	}
+
+
+	/*----------------- Login Page Code -----------------*/
+#nullable enable
+	private string? userName;
+	private string? password;
+#nullable disable
+
+	private string errorString;
+
+	/*
+		When user clicks on Submit button, check if all data is provided and then
+		initiate the logIn() using authentication service. Display's error if login
+		credentials didn't match. If credentials match, show Index and main UI.
+	*/
+	private async void Submit()
+	{
+		if (!(string.IsNullOrWhiteSpace(userName) && string.IsNullOrWhiteSpace(password)))
+		{
+			if (await Auth.logIn(userName, password))
+			{
+				errorString = userName = password = null;
+				NavManager.NavigateTo("/");
+				ApplicationState.IsLoggedIn = true;
+			}
+			else
+			{
+				errorString = "Wrong Username or Password";
+			}
+		}
+	}
+}

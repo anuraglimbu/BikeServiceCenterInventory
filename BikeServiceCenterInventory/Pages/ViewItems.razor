@@ -1,0 +1,140 @@
+@page "/viewitems"
+
+@implements IDisposable
+
+@using BikeServiceCenterInventory.Models
+@using BikeServiceCenterInventory.Services
+
+@inject IJSRuntime JSRuntime
+
+@inject NavigationManager NavManager
+
+@inject InventoryService Inventory
+
+
+<h4 class="fw-bolder h4 text-center">Inventory</h4>
+<center>
+	<hr class="underline" style="width:5em;height:3px;opacity:1">
+</center>
+<center>
+	<div class="input-group mb-3">
+		<select class="form-select btn btn-outline-secondary w-25" id="inputGroupSelect" name="typeID" @bind="ItemId">
+			<option value="-1">All Items</option>
+			<option value="0">Items In Stock</option>
+		</select>
+		<button class="btn btn-primary w-auto" type="submit" @onclick="Search"><span class="fa fa-filter"></span> Apply</button>
+	</div>
+</center>
+
+<div class="row justify-content-center">
+	<div class="col-lg-12">
+		<div class="card rounded-0">
+			<div class="col-lg-12">
+				<div class="card-body">
+					<div class="row dt-row">
+						<div class="col-sm-12">
+							<table id="myTable" class="table table-hover align-middle mb-0" style="width:100% !important;" role="grid">
+
+								<thead>
+									<tr>
+										<th class="sorting sorting_desc" tabindex="0" rowspan="1" colspan="1">Record Id</th>
+										<th class="sorting" tabindex="0" rowspan="1" colspan="1">Item</th>
+										<th class="sorting" tabindex="0" rowspan="1" colspan="1">Quantity</th>
+										<th class="sorting" tabindex="0" rowspan="1" colspan="1">Last Restocked</th>
+										<th class="sorting" tabindex="0" rowspan="1" colspan="1">Last Taken Out</th>
+									</tr>
+								</thead>
+								<tbody>
+									@foreach (var item in ShowInventoryViewData)
+									{
+										<tr>
+											<td>
+												<span class="fw-bold list-id text-color-secondary">#@item.Id</span>
+											</td>
+											<td>
+												@item.ItemName
+											</td>
+											<td class="dt-center">
+												@item.Quantity
+											</td>
+
+											@if (item.LastRestocked != null)
+											{
+												<td class="dt-center">
+													@item.LastRestocked.Value.ToShortDateString()
+												</td>
+											}
+											else
+											{
+												<td class="dt-center">
+													<span class="fw-bold">-</span>
+												</td>
+											}
+
+											@if (item.LastTakenOut != null)
+											{
+												<td class="dt-center">
+													@item.LastTakenOut.Value.ToShortDateString() @item.LastTakenOut.Value.ToShortTimeString()
+												</td>
+											}
+											else
+											{
+												<td class="dt-center">
+													<span class="fw-bold">-</span>
+												</td>
+											}
+										</tr>
+									}
+								</tbody>
+
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+@code
+{
+#nullable enable
+	private String? ItemId = "-1";
+#nullable disable
+
+	private List<Item> InventoryItems;
+
+	private List<Item> ShowInventoryViewData;
+
+	protected override async Task OnInitializedAsync()
+	{
+		InventoryItems = await Inventory.getAllItems();
+
+		ShowInventoryViewData = InventoryItems;
+	}
+
+	public void Search()
+	{
+		if (ItemId != "-1")
+		{
+			ShowInventoryViewData = InventoryItems.Where(data => data.Quantity > 0).ToList();
+		}
+		else
+		{
+			ShowInventoryViewData = InventoryItems;
+		}
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#myTable");
+		}
+	}
+
+	public void Dispose()
+	{
+		JSRuntime.InvokeAsync<object>("TestDataTablesRemove", "#myTable");
+	}
+}

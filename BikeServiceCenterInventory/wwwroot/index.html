@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>BikeServiceCenterInventory</title>
+    <base href="/" />
+
+    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link href="https://cdn.datatables.net/v/bs5/dt-1.13.5/b-2.4.1/r-2.5.0/sp-2.2.0/datatables.min.css" rel="stylesheet">
+    
+    <link href="css/app.css" rel="stylesheet" />
+
+    <link href="BikeServiceCenterInventory.styles.css" rel="stylesheet" />
+</head>
+
+<body>
+
+    <div class="status-bar-safe-area"></div>
+
+    <div id="app">Loading...</div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" integrity="sha512-6PM0qYu5KExuNcKt5bURAoT6KCThUmHRewN3zUFNaoI6Di7XJPTMoT6K0nsagZKk2OB4L7E3q1uQKHNHd4stIQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script type="text/javascript" src="js/jquery-3.7.0.min.js"></script>
+
+
+    <script src="https://cdn.datatables.net/v/bs5/dt-1.13.5/b-2.4.1/r-2.5.0/sp-2.2.0/datatables.min.js"></script>
+    
+
+    <script src="_framework/blazor.webview.js" autostart="false"></script>
+
+    <script src="_content/PSC.Blazor.Components.Chartjs/lib/Chart.js/chart.js"></script>
+    <script src="_content/PSC.Blazor.Components.Chartjs/Chart.js"></script>
+
+    <script>
+        function TestDataTablesAdd(table) {
+            $(document).ready(function () {
+                $(table)
+                    .addClass('nowrap')
+                    .dataTable({
+                        responsive: true,
+                        "order": []
+                    });
+            });
+        }
+    </script>
+
+    <script>
+        function TestDataTablesRemove(table) {
+            $(document).ready(function () {
+                $(table).DataTable().destroy();
+            });
+        }
+    </script>
+</body>
+
+</html>

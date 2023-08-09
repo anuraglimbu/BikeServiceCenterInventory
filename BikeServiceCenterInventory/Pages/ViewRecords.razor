@@ -1,0 +1,155 @@
+﻿@page "/viewrecords"
+
+@implements IDisposable
+
+@using System.Text.Json;
+
+@using BikeServiceCenterInventory.Models
+@using BikeServiceCenterInventory.Services
+@using BikeServiceCenterInventory.Constants
+
+@inject IJSRuntime JSRuntime
+
+@inject NavigationManager NavManager
+
+@inject RecordKeepingService Records
+@inject InventoryService Inventory
+
+
+<h4 class="fw-bolder h4 text-center">Approval Records</h4>
+<center>
+	<hr class="underline" style="width:5em;height:3px;opacity:1">
+</center>
+<center>
+	<div class="input-group mb-3">
+		<select class="form-select btn btn-outline-secondary w-25" id="inputGroupSelect" name="typeID" @bind="ItemId">
+			<option value="-1">All Items</option>
+			
+			@if (InventoryItems != null)
+			{
+				InventoryItems = InventoryItems.OrderBy(i => i.ItemName).ToList();
+				@foreach (Item item in InventoryItems)
+				{
+					<option value="@item.Id">@item.ItemName</option>
+				}
+			}
+		</select>
+		<input type="month" class="form-control w-25" placeholder="Event Name" name="query" @bind="selectedMonth" />
+		<button class="btn btn-primary w-auto" type="submit" @onclick="Search"><span class="fa fa-magnifying-glass"></span> Search</button>
+	</div>
+</center>
+
+<div class="row justify-content-center">
+	<div class="col-lg-12">
+		<div class="card rounded-0">
+			<div class="col-lg-12">
+				<div class="card-body">
+					<div class="row dt-row">
+						<div class="col-sm-12">
+							<table id="myTable" class="table table-hover align-middle mb-0" style="width:100% !important;" role="grid">
+
+								<thead>
+									<tr>
+										<th class="sorting" tabindex="0" rowspan="1" colspan="1">Item</th>
+										<th class="sorting" tabindex="0" rowspan="1" colspan="1">Qty. Taken</th>
+										<th class="sorting" tabindex="0" rowspan="1" colspan="1">Taken By</th>
+										<th class="sorting" tabindex="0" rowspan="1" colspan="1">Approved By</th>
+										<th class="sorting" tabindex="0" rowspan="1" colspan="1">Date</th>
+										<th class="sorting" tabindex="0" rowspan="1" colspan="1">Time</th>
+									</tr>
+								</thead>
+								<tbody>
+									@foreach (BaseRecordView record in ShowRecordViewData)
+									{
+										<tr>
+											<td>
+												@record.ItemName
+											</td>
+											<td class="dt-center">
+												@record.QuantityTakenOut
+											</td>
+											<td class="">
+												@record.TakenBy
+											</td>
+											<td>
+												@record.ApprovedBy
+											</td>
+											<td class="dt-center">
+												@record.DateTimeTakenOut.Value.ToShortDateString()
+											</td>
+											<td class="dt-center">
+												@record.DateTimeTakenOut.Value.ToShortTimeString()
+											</td>
+										</tr>
+									}
+								</tbody>
+
+							</table>
+
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+@code
+{
+#nullable enable
+	private String? ItemId = "-1";
+	private DateTime? selectedMonth;
+#nullable disable
+
+	private List<Item> InventoryItems;
+	private List<Record> RecordData;
+
+	private List<BaseRecordView> BaseRecordViewData;
+
+	private List<BaseRecordView> ShowRecordViewData;
+
+	protected override async Task OnInitializedAsync()
+	{
+		BaseRecordViewData = await Records.getBaseRecordViewAllData();
+		InventoryItems = await Inventory.getAllItems();
+		RecordData = await Records.getAllRecords();
+
+		ShowRecordViewData = BaseRecordViewData;
+	}
+
+	public async void Search()
+	{
+		if(selectedMonth != null)
+		{
+			ShowRecordViewData = await Records.getBaseRecordViewMonthData(selectedMonth ?? DateTime.Now);
+			if (ItemId != "-1")
+			{
+				ShowRecordViewData = ShowRecordViewData.Where(data => data.ItemId == int.Parse(ItemId)).ToList();
+			}
+		}
+		else
+		{
+			ShowRecordViewData = BaseRecordViewData;
+			if (ItemId != "-1")
+			{
+				ShowRecordViewData = BaseRecordViewData.Where(data => data.ItemId == int.Parse(ItemId)).ToList();
+			}
+		}
+	}
+
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#myTable");
+		}
+	}
+
+	public void Dispose()
+	{
+		JSRuntime.InvokeAsync<object>("TestDataTablesRemove", "#myTable");
+	}
+}

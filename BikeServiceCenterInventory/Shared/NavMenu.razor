@@ -1,0 +1,98 @@
+﻿@*
+===================================================================
+	Thes page is used by MAUI to show the left hand side navig-
+	ation menu in the UI. Have added some links to other pages
+	that have been created. Also added code in code section.
+===================================================================
+*@
+
+
+@using BikeServiceCenterInventory.Services
+@using BikeServiceCenterInventory.Models
+
+@inject NavigationManager NavManager
+
+@inject AuthenticationService Auth
+
+<div class="top-row ps-3 navbar navbar-dark">
+	<div class="container-fluid">
+		<a class="navbar-brand" href="">Inventory Management</a>
+		<button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+	</div>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+	<nav class="flex-column">
+		<div class="nav-item px-3">
+			<NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+				<span class="oi oi-home" aria-hidden="true"></span> Home
+			</NavLink>
+		</div>
+		<div class="nav-item px-3">
+			<NavLink class="nav-link" href="approve">
+				<span class="oi oi-task" aria-hidden="true"></span> Approve
+			</NavLink>
+		</div>
+		<div class="nav-item px-3">
+			<NavLink class="nav-link" href="restock">
+				<span class="fas fa-cart-flatbed"></span>&nbsp;&nbsp;&nbsp;&nbsp;Restock Item
+			</NavLink>
+		</div>
+		<div class="nav-item px-3">
+			<NavLink class="nav-link" href="viewitems">
+				<span class="fas fa-boxes-stacked"></span>&nbsp;&nbsp;&nbsp;&nbsp;View Inventory
+			</NavLink>
+		</div>
+		<div class="nav-item px-3">
+			<NavLink class="nav-link" href="viewrecords">
+				<span class="oi oi-book" aria-hidden="true"></span> View Records
+			</NavLink>
+		</div>
+		<div class="nav-item px-3">
+			<NavLink class="nav-link" href="stats">
+				<span class="fas fa-chart-simple"></span>&nbsp;&nbsp;&nbsp;&nbsp;Stats
+			</NavLink>
+		</div>
+		<div class="nav-item px-3">
+			<NavLink class="nav-link" href="logout" @onclick="LogOut"> <!-- Calling the LogOut() function when clicked -->
+				<span class="oi oi-account-logout" aria-hidden="true"></span> Log out
+			</NavLink>
+		</div>
+	</nav>
+</div>
+
+@code {
+	private bool collapseNavMenu = true;
+
+	/*
+		CascadingParameter sets the ApplcationState to have the same value as the root
+		ApplicationState's value and changing the value here will result in changes
+		at root level too.
+	*/
+	[CascadingParameter]
+	public AppState ApplicationState { get; set; }
+
+	private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+	private void ToggleNavMenu()
+	{
+		collapseNavMenu = !collapseNavMenu;
+	}
+
+	/*
+		LogOut() function that calls the Authentication service's logOut() 
+		function and sets the ApplicationState's IsLoggedIn field to false 
+		which indicates that user has clicked on Logout and thus the root 
+		switches to show the Login page.
+	*/
+	private void LogOut()
+	{
+
+		if (Auth.logOut())
+		{
+			ApplicationState.IsLoggedIn = false;
+		}
+	}
+}

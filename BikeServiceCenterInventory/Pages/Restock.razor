@@ -1,0 +1,142 @@
+@page "/restock"
+
+@using BikeServiceCenterInventory.Models
+@using BikeServiceCenterInventory.Services
+
+@inject NavigationManager NavManager
+
+@inject InventoryService Inventory
+
+<h4 class="fw-bolder h4 text-center">Restock Item</h4>
+<center>
+    <hr class="underline" style="width:5em;height:3px;opacity:1">
+</center>
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-md-8 col-sm-10 col-xs-12">
+        @if (globalSuccessMessage != null)
+        {
+            <div class="alert alert-success alert-dismissible" role="alert">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" @onclick="CloseSuccessMessage" aria-label="Close"></button>
+                @globalSuccessMessage
+            </div>
+        }
+
+        @if (globalErrorMessage != null)
+        {
+            <div class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" @onclick="CloseErrorMessage" aria-label="Close"></button>
+                @globalErrorMessage
+            </div>
+        }
+
+        <div class="card rounded-0 shadow">
+            <div class="card-body">
+                <div class="container-fluid">
+                    <div>
+                        @if (errorString != null)
+                        {
+                            <div class="alert alert-danger rounded-0 pb-0 align-content-center">
+                                <ul class="list-unstyled ps-0 text-center">
+                                    <li>
+                                        @errorString
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        <div class="form-floating mb-3">
+                            <select class="form-select" id="floatingSelect" @bind="ItemId">
+                                <option value="-1" selected>Select the item to restock</option>
+                                @if(ItemSelections.Count > 0)
+                                {
+                                    @if (ItemSelections != null)
+                                    {
+                                        @foreach(Item item in ItemSelections)
+                                        {
+                                            <option value="@item.Id">@item.ItemName</option>
+                                        }
+                                    }
+                                }
+                            </select>
+                            <label for="floatingSelect">Item</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input name="RestockQuantity" type="number" class="form-control" @bind="RestockQuantity">
+                            <label for="RestockQuantity" class="control-label">Restock Quantity</label>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group text-center">
+                            <input @onclick="ReStock" type="submit" value="Restock" class="form-control w-auto btn btn-primary" />
+                            <button @onclick="FormReset" class="form-control w-auto btn btn-default border">Cancel</button>
+                            <a href="/" class="form-control w-auto btn btn-secondary"><span class="oi oi-list"></span>&nbsp;View Records</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    private List<Item> ItemSelections;
+
+    private int RestockQuantity = 0;
+
+#nullable enable
+    private String? ItemId="-1";
+    
+    private String? errorString;
+    private String? globalSuccessMessage;
+    private String? globalErrorMessage;
+#nullable disable
+
+    private async void ReStock()
+    {
+        globalSuccessMessage = null;
+        globalErrorMessage = null;
+
+        errorString = null;
+
+        if (ItemId != "-1")
+        {
+            if (RestockQuantity <= 0)
+            {
+                errorString = "No quantity given for restock";
+            }
+            else
+            {
+                if (await Inventory.restockItem(int.Parse(ItemId), RestockQuantity))
+                {
+                    globalSuccessMessage = "Restocked " + ItemSelections.First(item => item.Id == int.Parse(ItemId)).ItemName + " Successfully";
+                    FormReset();
+                }
+                else
+                {
+                    globalErrorMessage = "Could Not Restock " + ItemSelections.First(item => item.Id == int.Parse(ItemId)).ItemName;
+                }
+            }
+        }
+    }
+
+    private void FormReset()
+    {
+        ItemId = "-1";
+        RestockQuantity = 0;
+    }
+
+    private void CloseErrorMessage()
+    {
+        globalErrorMessage = null;
+    }
+
+    private void CloseSuccessMessage()
+    {
+        globalSuccessMessage = null;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ItemSelections = await Inventory.getAllItems();
+    }
+}
